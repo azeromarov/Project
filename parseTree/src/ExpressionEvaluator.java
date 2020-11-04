@@ -1,12 +1,12 @@
 import java.util.ArrayList;
 
 class ExpressionNode {
-    private double Value;
+    private float Value;
     private ExpressionEvaluator.OPERATION Operation;
     private ExpressionNode Left;
     private ExpressionNode Right;
 
-    public ExpressionNode(double Value) {
+    public ExpressionNode(float Value) {
         this.Value = Value;
         this.Operation = ExpressionEvaluator.OPERATION.Equals;
         this.Left = null;
@@ -20,7 +20,6 @@ class ExpressionNode {
         if (Operation == ExpressionEvaluator.OPERATION.Equals) {
             System.err.println("You cannot explicitly define an Equals node.");
             System.exit(1);
-            //throw new Exception("You cannot explicitly define an Equals node. To define a value-only node, passing in a double");
         }
         this.Operation = Operation;
         this.Left = Left;
@@ -31,13 +30,12 @@ class ExpressionNode {
         this.Left = Left;
         this.Right = Right;
     }
-    public double eval() {
-        //determine and perform operation on children
+    public float eval() {
         switch (this.Operation) {
             case Equals:
                 break;
             case Power:
-                this.Value = Math.pow(this.Left.eval(), this.Right.eval());
+                this.Value = (float) Math.pow(this.Left.eval(), this.Right.eval());
                 break;
             case Division:
                 this.Value = this.Left.eval() / this.Right.eval();
@@ -67,13 +65,11 @@ class ExpressionNode {
         if (this.Operation == ExpressionEvaluator.OPERATION.Equals) {
             return String.valueOf(this.Value);
         } else {
-            //fully parenthesized
             return "(" + this.Left.dump()  + " " + this.GetOperation() + " " + this.Right.dump() + ")";
         }
     }
 
     public boolean IsOperation() {
-        //if the node is not a value and the children are not assigned then we are a stand-alone operation
         return (this.Operation != ExpressionEvaluator.OPERATION.Equals) && (this.Left == null);
     }
     public String toString() {
@@ -82,14 +78,14 @@ class ExpressionNode {
 }
 
 interface Expression{
-    public double eval();
+    public float eval();
     public void dump();
 }
 
 public class ExpressionEvaluator implements Expression{
 
     public static void main(String []args){
-        ExpressionEvaluator bt = new ExpressionEvaluator("(2^5+6)/2");
+        ExpressionEvaluator bt = new ExpressionEvaluator("(2^5+6*2)/2");
         bt.dump();
         System.out.print(bt.eval());
     }
@@ -178,7 +174,7 @@ public class ExpressionEvaluator implements Expression{
         for (String Term : Terms) {
             if (ExpressionEvaluator.OPERATIONS.indexOf(Term) == -1) {
                 try {
-                    Nodes.add(new ExpressionNode(Double.valueOf(Term)));
+                    Nodes.add(new ExpressionNode(Float.valueOf(Term)));
                 }
                 catch (NumberFormatException e) {
                     System.err.println("Invalid operand '" + Term + "'. Reverting to zero.");
@@ -199,7 +195,6 @@ public class ExpressionEvaluator implements Expression{
                         OperationStack.add(0, Nodes.get(i));
                         break;
                     case ')':
-                        //assign operations children until left parenthesis is encountered
                         while (OperationStack.get(0).toString().equals("(") == false)
                         {
                             ValueStack.add(0, OperationStack.remove(0));
@@ -246,7 +241,7 @@ public class ExpressionEvaluator implements Expression{
         System.out.println(this.Root.dump());
     }
 
-    public double eval() {
+    public float eval() {
         return this.Root.eval();
     }
 }
