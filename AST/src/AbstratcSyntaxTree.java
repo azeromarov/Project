@@ -1,17 +1,27 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 
 class AbstractSyntaxTree {
     public static void main(String[] args){
-        // ((2^2 + a + sin(30)) + (12 * 2 + log(13 - (-2)) / 5))
-        Expression root = new Sum(new Sum(new Sum(new Power(new Value(2.0f),new Value(2.0f)),new Variable("a",5.0f)), new Sin(new Value(30.0f))), new Sum(new Multiply(new Value(12.0f),new Value(2.0f)), new Divide(new Log(new Subtract(new Value(13.0f),new Value(-2.0f))), new Value(5.0f))));
-        root.dump();
-        System.out.print(" = " + root.eval());
+        Map m = new HashMap();
+        Set keys;
+        Scanner scan = new Scanner(System.in);
+        System.out.print("Please enter the value for: a = ");
+        m.put("a",scan.nextFloat());
+        keys = m.keySet();
+        for(Object key : keys) {
+            // ((2^2 + a + sin(30)) + (12 * 2 + log(13 - (-2)) / 5))
+            Expression root = new Sum(new Sum(new Sum(new Power(new Value(2.0f),new Value(2.0f)),new Variable(key.toString())), new Sin(new Value(30.0f))), new Sum(new Multiply(new Value(12.0f),new Value(2.0f)), new Divide(new Log(new Subtract(new Value(13.0f),new Value(-2.0f))), new Value(5.0f))));
+            root.dump();
+            System.out.print(" = " + root.eval(m));
+        }
     }
 }
 
 interface Expression{
-    public float eval();
+    public float eval(Map<String, Float> map);
     public void dump();
 }
 
@@ -22,8 +32,8 @@ class Sum implements Expression{
         this.first = first;
         this.second = second;
     }
-    public float eval(){
-        return this.first.eval() + this.second.eval();
+    public float eval(Map<String, Float> map){
+        return this.first.eval(map) + this.second.eval(map);
     }
     public void dump(){
         System.out.print("( ");
@@ -41,8 +51,8 @@ class Subtract implements Expression{
         this.first = first;
         this.second = second;
     }
-    public float eval(){
-        return this.first.eval() - this.second.eval();
+    public float eval(Map<String, Float> map){
+        return this.first.eval(map) - this.second.eval(map);
     }
     public void dump(){
         System.out.print("( ");
@@ -60,8 +70,8 @@ class Multiply implements Expression{
         this.first = first;
         this.second = second;
     }
-    public float eval(){
-        return this.first.eval() * this.second.eval();
+    public float eval(Map<String, Float> map){
+        return this.first.eval(map) * this.second.eval(map);
     }
     public void dump(){
         System.out.print("( ");
@@ -79,8 +89,8 @@ class Divide implements Expression{
         this.first = first;
         this.second = second;
     }
-    public float eval(){
-        return this.first.eval() / this.second.eval();
+    public float eval(Map<String, Float> map){
+        return this.first.eval(map) / this.second.eval(map);
     }
     public void dump(){
         System.out.print("( ");
@@ -98,8 +108,8 @@ class Power implements Expression{
         this.value = value;
         this.power = power;
     }
-    public float eval(){
-        return (float) Math.pow(this.value.eval(), this.power.eval());
+    public float eval(Map<String, Float> map){
+        return (float) Math.pow(this.value.eval(map), this.power.eval(map));
     }
     public void dump(){
         System.out.print("( ");
@@ -115,8 +125,8 @@ class Sin implements Expression{
     Sin(Expression value){
         this.value = value;
     }
-    public float eval(){
-        return (float) Math.sin(Math.toRadians(this.value.eval()));
+    public float eval(Map<String, Float> map){
+        return (float) Math.sin(Math.toRadians(this.value.eval(map)));
     }
     public void dump(){
         System.out.print("sin( ");
@@ -130,8 +140,8 @@ class Cos implements Expression{
     Cos(Expression value){
         this.value = value;
     }
-    public float eval(){
-        return (float) Math.cos(Math.toRadians(this.value.eval()));
+    public float eval(Map<String, Float> map){
+        return (float) Math.cos(Math.toRadians(this.value.eval(map)));
     }
     public void dump(){
         System.out.print("cos( ");
@@ -145,8 +155,8 @@ class Tan implements Expression{
     Tan(Expression value){
         this.value = value;
     }
-    public float eval(){
-        return (float) Math.tan(Math.toRadians(this.value.eval()));
+    public float eval(Map<String, Float> map){
+        return (float) Math.tan(Math.toRadians(this.value.eval(map)));
     }
     public void dump(){
         System.out.print("tan( ");
@@ -160,8 +170,8 @@ class Cot implements Expression{
     Cot(Expression value){
         this.value = value;
     }
-    public float eval(){
-        return (float) ((float) 1.0f/Math.tan(Math.toRadians(this.value.eval())));
+    public float eval(Map<String, Float> map){
+        return (float) ((float) 1.0f/Math.tan(Math.toRadians(this.value.eval(map))));
     }
     public void dump(){
         System.out.print("cot( ");
@@ -175,8 +185,8 @@ class Log implements Expression{
     Log(Expression value){
         this.value = value;
     }
-    public float eval(){
-        return (float) Math.log(this.value.eval());
+    public float eval(Map<String, Float> map){
+        return (float) Math.log(this.value.eval(map));
     }
     public void dump(){
         System.out.print("log( ");
@@ -190,7 +200,7 @@ class Value implements Expression{
     Value(float value){
         this.value = value;
     }
-    public float eval(){
+    public float eval(Map<String, Float> map){
         return this.value;
     }
     public void dump(){
@@ -203,17 +213,18 @@ class Value implements Expression{
     }
 }
 
-class Variable implements Expression{
-    Map variable = new HashMap();
-    final String key;
-    Variable(String variable,float value){
-        this.variable.put(variable, value);
-        key = variable;
+class Variable implements Expression {
+    final String variable;
+
+    Variable(String variable) {
+        this.variable = variable;
     }
-    public float eval(){
-        return (float) this.variable.get(this.key);
+
+    public float eval(Map<String, Float> map) {
+        return (float) map.get(this.variable);
     }
-    public void dump(){
-        System.out.print(this.key);
+
+    public void dump() {
+        System.out.print(this.variable);
     }
 }
